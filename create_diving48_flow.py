@@ -2,9 +2,10 @@
 
 import os
 import json
-
 import torch
+import math
 
+import numpy as np
 import liteflownet as lfn
 
 from liteflownet.model import Network
@@ -23,6 +24,11 @@ def get_all_video_ids(dataset_path, dataset_version, dataset_type):
 
     return data
 
+def get_batch(x1, x2, batch_size, i):
+    start = i * batch_size
+    end = min(start + batch_size, len(x1))
+    return x1[start:end], x2[start:end]
+
 def write_flo_jpeg(flo, dirname):
     flo_rgb = flo.transpose(0, 2, 3, 1)
     flo_rgb = lfn.flowvid2rgb(flo_rgb)
@@ -37,6 +43,7 @@ if __name__ == '__main__':
     DATASET_PATH = os.getenv('DATASET_PATH')
     DATASET_VERSION = os.getenv('DATASET_VERSION')
     DATASET_TYPE = os.getenv('DATASET_TYPE')
+    BATCH_SIZE = os.getenv('BATCH_SIZE', 16)
 
     assert DATASET_PATH is not None
     assert DATASET_VERSION is not None
@@ -55,12 +62,23 @@ if __name__ == '__main__':
     device = torch.device('cuda')
     model = Network().to(device)
 
+    batch_size = BATCH_SIZE
+
     for video_meta in tqdm(video_metas):
         video_id = video_meta['vid_name']
         video_path = os.path.join(DATASET_PATH, 'rgb', f'{video_id}.mp4')
         assert os.path.exists(video_path), f'Video path does not exist: {video_path}'
         video = lfn.read_video_file(video_path)
-        x = lfn.preprocess_video(video).to(device)
-        flo = model(x[:-1], x[1:])
+        x = lfn.preprocess_video(video)
+        x1 = x[:-1]
+        x2 = x[1:]
+        flo = []
+        for i in range(math.ceil(len(x1) / batch_size)):
+            xb1, xb2 = get_batch(x1, x2, batch_size, i)
+            xb1 = xb1.to(device)
+            xb2 = xb2.to(device)
+            flo.extend(model(xb1, xb2).detach().cpu().numpy())
+
+        flo = np.stack(flo)
         write_flo_jpeg(flo, os.path.join(DATASET_PATH, 'flow', video_id))
 
