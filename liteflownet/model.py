@@ -302,10 +302,8 @@ class Network(torch.nn.Module):
 ""
 
 def estimate(tenOne, tenTwo):
-    global netNetwork
 
-    if netNetwork is None:
-        netNetwork = Network().cuda().train(False)
+    netNetwork = Network().to(tenOne.device).train(False)
     # end
 
     assert(tenOne.shape[1] == tenTwo.shape[1])
@@ -317,14 +315,17 @@ def estimate(tenOne, tenTwo):
     # assert(intWidth == 1024) # remember that there is no guarantee for correctness, comment this line out if you acknowledge this and want to continue
     # assert(intHeight == 436) # remember that there is no guarantee for correctness, comment this line out if you acknowledge this and want to continue
 
-    tenPreprocessedOne = tenOne.cuda().view(1, 3, intHeight, intWidth)
-    tenPreprocessedTwo = tenTwo.cuda().view(1, 3, intHeight, intWidth)
+    tenPreprocessedOne = tenOne.view(1, 3, intHeight, intWidth)
+    tenPreprocessedTwo = tenTwo.view(1, 3, intHeight, intWidth)
 
     intPreprocessedWidth = int(math.floor(math.ceil(intWidth / 32.0) * 32.0))
     intPreprocessedHeight = int(math.floor(math.ceil(intHeight / 32.0) * 32.0))
-
+    print(intPreprocessedWidth)
+    print(intPreprocessedHeight)
     tenPreprocessedOne = torch.nn.functional.interpolate(input=tenPreprocessedOne, size=(intPreprocessedHeight, intPreprocessedWidth), mode='bilinear', align_corners=False)
     tenPreprocessedTwo = torch.nn.functional.interpolate(input=tenPreprocessedTwo, size=(intPreprocessedHeight, intPreprocessedWidth), mode='bilinear', align_corners=False)
+    
+    print(tenPreprocessedOne.shape)
 
     tenFlow = torch.nn.functional.interpolate(input=netNetwork(tenPreprocessedOne, tenPreprocessedTwo), size=(intHeight, intWidth), mode='bilinear', align_corners=False)
 
