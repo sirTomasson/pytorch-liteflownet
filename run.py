@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 import math
 import numpy
@@ -6,7 +7,7 @@ import PIL.Image
 import sys
 import torch
 
-from model import *
+from liteflownet.model import *
 
 try:
     from .correlation import correlation # the custom cost volume layer
