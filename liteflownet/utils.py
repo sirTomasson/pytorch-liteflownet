@@ -4,7 +4,7 @@ import cv2
 
 import numpy as np
 
-from run import estimate
+from .model import estimate
 
 def read_flow_file(file_path):
     """

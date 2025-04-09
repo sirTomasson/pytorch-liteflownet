@@ -55,39 +55,7 @@ def backwarp(tenInput, tenFlow):
     tenFlow = torch.cat([ tenFlow[:, 0:1, :, :] * (2.0 / (tenInput.shape[3] - 1.0)), tenFlow[:, 1:2, :, :] * (2.0 / (tenInput.shape[2] - 1.0)) ], 1)
 
     return torch.nn.functional.grid_sample(input=tenInput, grid=(backwarp_tenGrid[str(tenFlow.shape)] + tenFlow).permute(0, 2, 3, 1), mode='bilinear', padding_mode='zeros', align_corners=True)
-# end
 
-def estimate(tenOne, tenTwo):
-    global netNetwork
-
-    if netNetwork is None:
-        netNetwork = Network().cuda().train(False)
-    # end
-
-    assert(tenOne.shape[1] == tenTwo.shape[1])
-    assert(tenOne.shape[2] == tenTwo.shape[2])
-
-    intWidth = tenOne.shape[2]
-    intHeight = tenOne.shape[1]
-
-    # assert(intWidth == 1024) # remember that there is no guarantee for correctness, comment this line out if you acknowledge this and want to continue
-    # assert(intHeight == 436) # remember that there is no guarantee for correctness, comment this line out if you acknowledge this and want to continue
-
-    tenPreprocessedOne = tenOne.cuda().view(1, 3, intHeight, intWidth)
-    tenPreprocessedTwo = tenTwo.cuda().view(1, 3, intHeight, intWidth)
-
-    intPreprocessedWidth = int(math.floor(math.ceil(intWidth / 32.0) * 32.0))
-    intPreprocessedHeight = int(math.floor(math.ceil(intHeight / 32.0) * 32.0))
-
-    tenPreprocessedOne = torch.nn.functional.interpolate(input=tenPreprocessedOne, size=(intPreprocessedHeight, intPreprocessedWidth), mode='bilinear', align_corners=False)
-    tenPreprocessedTwo = torch.nn.functional.interpolate(input=tenPreprocessedTwo, size=(intPreprocessedHeight, intPreprocessedWidth), mode='bilinear', align_corners=False)
-
-    tenFlow = torch.nn.functional.interpolate(input=netNetwork(tenPreprocessedOne, tenPreprocessedTwo), size=(intHeight, intWidth), mode='bilinear', align_corners=False)
-
-    tenFlow[:, 0, :, :] *= float(intWidth) / float(intPreprocessedWidth)
-    tenFlow[:, 1, :, :] *= float(intHeight) / float(intPreprocessedHeight)
-
-    return tenFlow[0, :, :, :].cpu()
 # end
 
 ##########################################################

@@ -37,6 +37,7 @@ if __name__ == '__main__':
     DATASET_PATH = os.getenv('DATASET_PATH')
     DATASET_VERSION = os.getenv('DATASET_VERSION')
     DATASET_TYPE = os.getenv('DATASET_TYPE')
+    OUTPUT_PATH = os.getenv('OUTPUT_PATH')
 
     assert DATASET_PATH is not None
     assert DATASET_VERSION is not None
