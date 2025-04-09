@@ -74,7 +74,8 @@ if __name__ == '__main__':
         x1 = x[:-1]
         x2 = x[1:]
         flo = []
-        for i in range(math.ceil(len(x1) / batch_size)):
+        n_batches = math.ceil(len(x1) / batch_size)
+        for i in range(n_batches):
             xb1, xb2 = get_batch(x1, x2, batch_size, i)
             xb1 = xb1.to(device)
             xb2 = xb2.to(device)
